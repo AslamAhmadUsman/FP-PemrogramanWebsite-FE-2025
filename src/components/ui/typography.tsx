@@ -59,9 +59,7 @@ export function Typography({
         </h4>
       );
     case "p":
-      return (
-        <p className={`leading-7 not-first:mt-6 ${className}`}>{children}</p>
-      );
+      return <p className={`not-first:mt-6 ${className}`}>{children}</p>;
     case "blockquote":
       return (
         <blockquote className={`mt-6 border-l-2 pl-6 italic ${className}`}>

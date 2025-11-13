@@ -90,7 +90,8 @@ export default function Sandbox() {
       </Typography>
       <Typography variant="h2">The People of the Kingdom</Typography>
       <Typography variant="h3">The Joke Tax</Typography>
-      <Typography variant="p">
+      <Typography variant="h4">A Royal Decree</Typography>
+      <Typography variant="p" className="text-gray-400">
         The king, seeing how much happier his subjects were, realized the error
         of his ways and repealed the joke tax.
       </Typography>
@@ -139,8 +140,14 @@ export default function Sandbox() {
 
       {/* INPUT & TEXTAREA */}
       <div className="flex flex-col space-y-2 w-64">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" placeholder="Enter your email" />
+        <Label htmlFor="email" className="text-sky-800">
+          Email
+        </Label>
+        <Input
+          id="email"
+          className="bg-zinc-100 text-zinc-600"
+          placeholder="Enter your email"
+        />
         <Label htmlFor="message">Message</Label>
         <Textarea id="message" placeholder="Type something..." />
       </div>
