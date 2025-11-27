@@ -11,6 +11,7 @@ import EditQuiz from "./pages/EditQuiz";
 import Quiz from "./pages/Quiz";
 import ProtectedRoute from "./routes/ProtectedRoutes";
 import CreateSpeedSorting from "./pages/speed-sorting/CreateSpeedSorting";
+import SpeedSorting from "./pages/speed-sorting/SpeedSorting";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/sandbox" element={<Sandbox />} />
         <Route path="/quiz/play/:id" element={<Quiz />} />
+        <Route path="/speed-sorting/play/:id" element={<SpeedSorting />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<ProfilePage />} />
