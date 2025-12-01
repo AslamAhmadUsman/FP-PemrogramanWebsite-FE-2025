@@ -40,9 +40,9 @@ export default function SpeedSorting() {
           onExit={() => game.setShowExit(true)}
         />
 
-        <div className="w-full h-full p-8 flex justify-center items-center">
-          <div className="max-w-3xl w-full space-y-6">
-            <div className="bg-white w-full p-8 text-center space-y-6 rounded-xl border shadow-sm">
+        <div className="w-full flex-1 p-2 sm:p-4 lg:p-6 flex justify-center items-center">
+          <div className="w-full max-w-7xl space-y-4 sm:space-y-6 lg:space-y-8">
+            <div className="bg-white w-full p-4 sm:p-8 lg:p-12 text-center space-y-6 sm:space-y-8 lg:space-y-10 rounded-xl lg:rounded-2xl border sm:border-2 shadow-md lg:shadow-lg min-h-[400px] sm:min-h-[500px] lg:min-h-[600px] flex flex-col justify-center">
               {game.gameState === "waiting" && (
                 <StartScreen onStart={game.startGame} />
               )}
@@ -71,7 +71,7 @@ export default function SpeedSorting() {
                     onDrop={game.handleDrop}
                   />
 
-                  <div className="text-lg font-bold text-gray-900">
+                  <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mt-4 sm:mt-6 lg:mt-8">
                     {game.completedWords} of {game.totalWords} words completed
                   </div>
                 </>

@@ -10,6 +10,7 @@ import { ActionButtons } from "./components/ActionButtons";
 import { CategoriesForm } from "./components/CategoriesForm";
 import { GameInfoForm } from "./components/GameInfoForm";
 import { WordsForm } from "./components/WordsForm";
+import { useCreateSpeedSorting } from "./hooks/useCreateSpeedSorting";
 import { type WordItem } from "./types";
 
 export default function CreateSpeedSorting() {
@@ -19,7 +20,7 @@ export default function CreateSpeedSorting() {
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [categories, setCategories] = useState<string[]>([""]);
   const [words, setWords] = useState<WordItem[]>([
-    { text: "", categoryIndex: 0, image: null },
+    { text: "", categoryIndex: 0, image: null, type: "text" },
   ]);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -86,7 +87,10 @@ export default function CreateSpeedSorting() {
       toast.error("You can only add up to 20 words.");
       return;
     }
-    setWords([...words, { text: "", categoryIndex: 0, image: null }]);
+    setWords([
+      ...words,
+      { text: "", categoryIndex: 0, image: null, type: "text" },
+    ]);
     clearFormError("words");
   };
 
@@ -103,13 +107,27 @@ export default function CreateSpeedSorting() {
   const updateWord = (
     index: number,
     field: keyof WordItem,
-    value: string | number | File | null,
+    value: string | number | File | null | "text" | "image",
   ) => {
-    const newWords = [...words];
-    newWords[index] = { ...newWords[index], [field]: value };
-    setWords(newWords);
+    setWords((prevWords) => {
+      const newWords = [...prevWords];
+      const updates: Partial<WordItem> = { [field]: value };
+      if (field === "type") {
+        if (value === "text") {
+          updates.image = null;
+        } else if (value === "image") {
+          updates.text = "";
+        }
+      }
+      newWords[index] = { ...newWords[index], ...updates };
+      return newWords;
+    });
     clearFormError(`words.${index}.${field}`);
     clearFormError("words");
+    if (field === "type") {
+      clearFormError(`words.${index}.text`);
+      clearFormError(`words.${index}.image`);
+    }
   };
 
   const validateForm = () => {
@@ -123,7 +141,14 @@ export default function CreateSpeedSorting() {
 
     const filteredCategories = categories.filter((cat) => cat.trim() !== "");
 
-    const filteredWords = words.filter((word) => word.text.trim() !== "");
+    const filteredWords = words.filter((word) => {
+      if (word.type === "text") {
+        return word.text.trim() !== "";
+      } else if (word.type === "image") {
+        return word.image !== null;
+      }
+      return false;
+    });
 
     const validationPayload = {
       title: title.trim(),
@@ -153,12 +178,20 @@ export default function CreateSpeedSorting() {
     });
 
     words.forEach((word, index) => {
-      if (word.text.trim() === "") {
-        allErrors[`words.${index}.text`] = "Word is required";
-        isValid = false;
-      } else if (word.text.trim().length < 2) {
-        allErrors[`words.${index}.text`] = "Word must be at least 2 characters";
-        isValid = false;
+      if (word.type === "text") {
+        if (word.text.trim() === "") {
+          allErrors[`words.${index}.text`] = "Word is required";
+          isValid = false;
+        } else if (word.text.trim().length < 2) {
+          allErrors[`words.${index}.text`] =
+            "Word must be at least 2 characters";
+          isValid = false;
+        }
+      } else if (word.type === "image") {
+        if (!word.image) {
+          allErrors[`words.${index}.image`] = "Image is required";
+          isValid = false;
+        }
       }
 
       if (
@@ -184,9 +217,35 @@ export default function CreateSpeedSorting() {
       }
     });
 
-    setFormErrors(allErrors);
+    const filteredErrors: Record<string, string> = {};
+    Object.entries(allErrors).forEach(([key, value]) => {
+      const wordMatch = key.match(/^words\.(\d+)\.(text|image)$/);
+      if (wordMatch) {
+        const wordIndex = parseInt(wordMatch[1]);
+        const fieldType = wordMatch[2] as "text" | "image";
+        if (words[wordIndex] && words[wordIndex].type === fieldType) {
+          filteredErrors[key] = value;
+        }
+      } else {
+        filteredErrors[key] = value;
+      }
+    });
+
+    console.log(allErrors);
+
+    setFormErrors(filteredErrors);
     return isValid;
   };
+
+  const toBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+    });
+
+  const create = useCreateSpeedSorting;
 
   const handleSubmit = async () => {
     if (!validateForm()) {
@@ -197,7 +256,14 @@ export default function CreateSpeedSorting() {
     setIsSubmitting(true);
     try {
       const filteredCategories = categories.filter((cat) => cat.trim() !== "");
-      const filteredWords = words.filter((word) => word.text.trim() !== "");
+      const filteredWords = words.filter((word) => {
+        if (word.type === "text") {
+          return word.text.trim() !== "";
+        } else if (word.type === "image") {
+          return word.image !== null;
+        }
+        return false;
+      });
       const gameData = {
         title: title.trim(),
         description: description.trim(),
@@ -206,10 +272,27 @@ export default function CreateSpeedSorting() {
         words: filteredWords,
       };
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      toast.success("Speed Sorting game created successfully!");
-      console.log("Speed Sorting game data to submit:", gameData);
+      await create({
+        name: gameData.title,
+        description: gameData.description,
+        thumbnail_image: gameData.thumbnail!,
+        categories: gameData.categories.map((name) => ({ name })),
+        items: await Promise.all(
+          gameData.words.map(async (word) => ({
+            type: word.image ? "file" : "text",
+            value: word.image ? await toBase64(word.image) : word.text,
+            category_index: word.categoryIndex,
+          })),
+        ),
+      });
+      toast.success("Speed sorting game created successfully");
+      setTitle("");
+      setDescription("");
+      setThumbnail(null);
+      setCategories([""]);
+      setWords([{ text: "", categoryIndex: 0, image: null, type: "text" }]);
+      setFormErrors({});
+      navigate("/create-projects");
     } catch (error) {
       console.error("Error creating speed sorting game:", error);
       toast.error("Failed to create speed sorting game");

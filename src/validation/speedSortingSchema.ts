@@ -24,14 +24,27 @@ export const speedSortingCategorySchema = z
     { message: "Categories must be unique" },
   );
 
-const wordSchema = z.object({
+const textWordSchema = z.object({
+  type: z.literal("text"),
   text: z
     .string()
     .min(2, "Word must be at least 2 characters")
     .max(30, "Word must be less than 30 characters"),
   categoryIndex: z.number().min(0, "Invalid category selection"),
-  image: z.instanceof(File).optional().nullable(),
+  image: z.null().optional(),
 });
+
+const imageWordSchema = z.object({
+  type: z.literal("image"),
+  text: z.string().optional().default(""),
+  categoryIndex: z.number().min(0, "Invalid category selection"),
+  image: z.instanceof(File, { message: "Image is required" }),
+});
+
+const wordSchema = z.discriminatedUnion("type", [
+  textWordSchema,
+  imageWordSchema,
+]);
 
 export const speedSortingSchema = z.object({
   title: z

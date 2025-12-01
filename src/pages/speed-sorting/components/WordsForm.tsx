@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import Dropzone from "@/components/ui/dropzone";
 import { FormField } from "@/components/ui/form-field";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -11,12 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Typography } from "@/components/ui/typography";
 import { Plus, Trash2 } from "lucide-react";
-
-interface WordItem {
-  text: string;
-  categoryIndex: number;
-  image?: File | null;
-}
+import { type WordItem } from "../types";
 
 interface WordsFormProps {
   words: WordItem[];
@@ -27,7 +23,7 @@ interface WordsFormProps {
   onUpdateWord: (
     index: number,
     field: keyof WordItem,
-    value: string | number | File | null,
+    value: string | number | File | null | "text" | "image",
   ) => void;
   onClearError: (key: string) => void;
 }
@@ -58,7 +54,7 @@ export function WordsForm({
       </div>
       <div className="space-y-4">
         {words.map((word, index) => (
-          <div key={index} className="space-y-2">
+          <div key={`word-${index}-${word.type}`} className="space-y-2">
             <div className="flex items-center gap-2">
               <Typography variant="p" className="font-medium">
                 Word {index + 1}
@@ -76,92 +72,174 @@ export function WordsForm({
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <FormField
-                  required
-                  label="Word"
-                  placeholder="Enter word"
-                  type="text"
-                  value={word.text}
-                  onChange={(e) => onUpdateWord(index, "text", e.target.value)}
-                  className={
-                    formErrors[`words.${index}.text`]
-                      ? "border-red-500 bg-red-50"
-                      : "bg-[#F3F3F5]"
+            {/* Content Type Selection */}
+            <div className="mb-4">
+              <Label className="flex items-center gap-1 mb-3">
+                Content Type
+                <span className="text-red-500">*</span>
+              </Label>
+              <RadioGroup
+                value={word.type}
+                onValueChange={(value) => {
+                  const newType = value as "text" | "image";
+                  onUpdateWord(index, "type", newType);
+                  if (newType === "text") {
+                    onUpdateWord(index, "image", null);
+                    onClearError(`words.${index}.image`);
+                  } else {
+                    onUpdateWord(index, "text", "");
+                    onClearError(`words.${index}.text`);
                   }
-                />
-                {formErrors[`words.${index}.text`] && (
-                  <div className="text-sm text-red-500 mt-1">
-                    {formErrors[`words.${index}.text`]}
-                  </div>
-                )}
-              </div>
+                }}
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="text" id={`text-${index}`} />
+                  <Label htmlFor={`text-${index}`} className="cursor-pointer">
+                    Text
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="image" id={`image-${index}`} />
+                  <Label htmlFor={`image-${index}`} className="cursor-pointer">
+                    Image
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
 
-              <div className="grid w-full items-center gap-1.5">
-                <Label className="flex items-center gap-1">
-                  Category
-                  <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={word.categoryIndex.toString()}
-                  onValueChange={(value) =>
-                    onUpdateWord(index, "categoryIndex", parseInt(value))
-                  }
-                >
-                  <SelectTrigger
-                    className={`w-full ${
-                      formErrors[`words.${index}.categoryIndex`]
+            {word.type === "image" ? (
+              /* Stack vertically for image type */
+              <div className="space-y-4">
+                <div>
+                  <Dropzone
+                    label="Word Image"
+                    required={true}
+                    maxSize={5 * 1024 * 1024}
+                    allowedTypes={[
+                      "image/png",
+                      "image/jpeg",
+                      "image/jpg",
+                      "image/webp",
+                    ]}
+                    defaultValue={word.image}
+                    onChange={(file) => {
+                      onUpdateWord(index, "image", file);
+                      onClearError(`words.${index}.image`);
+                    }}
+                  />
+                  {formErrors[`words.${index}.image`] && (
+                    <div className="text-sm text-red-500 mt-1">
+                      {formErrors[`words.${index}.image`]}
+                    </div>
+                  )}
+                </div>
+                <div className="grid w-full items-center gap-1.5">
+                  <Label className="flex items-center gap-1">
+                    Category
+                    <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={word.categoryIndex.toString()}
+                    onValueChange={(value) =>
+                      onUpdateWord(index, "categoryIndex", parseInt(value))
+                    }
+                  >
+                    <SelectTrigger
+                      className={`w-full ${
+                        formErrors[`words.${index}.categoryIndex`]
+                          ? "border-red-500 bg-red-50"
+                          : "bg-[#F3F3F5]"
+                      }`}
+                    >
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category, categoryIndex) => (
+                        <SelectItem
+                          key={categoryIndex}
+                          value={categoryIndex.toString()}
+                          disabled={category.trim() === ""}
+                        >
+                          {category.trim() ||
+                            `Category ${categoryIndex + 1} (empty)`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {formErrors[`words.${index}.categoryIndex`] && (
+                    <div className="text-sm text-red-500 mt-1">
+                      {formErrors[`words.${index}.categoryIndex`]}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* Grid layout for text type */
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <FormField
+                    required
+                    label="Word"
+                    placeholder="Enter word"
+                    type="text"
+                    value={word.text}
+                    onChange={(e) =>
+                      onUpdateWord(index, "text", e.target.value)
+                    }
+                    className={
+                      formErrors[`words.${index}.text`]
                         ? "border-red-500 bg-red-50"
                         : "bg-[#F3F3F5]"
-                    }`}
-                  >
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category, categoryIndex) => (
-                      <SelectItem
-                        key={categoryIndex}
-                        value={categoryIndex.toString()}
-                        disabled={category.trim() === ""}
-                      >
-                        {category.trim() ||
-                          `Category ${categoryIndex + 1} (empty)`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {formErrors[`words.${index}.categoryIndex`] && (
-                  <div className="text-sm text-red-500 mt-1">
-                    {formErrors[`words.${index}.categoryIndex`]}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <Dropzone
-                label="Word Image (Optional)"
-                required={false}
-                maxSize={5 * 1024 * 1024}
-                allowedTypes={[
-                  "image/png",
-                  "image/jpeg",
-                  "image/jpg",
-                  "image/webp",
-                ]}
-                defaultValue={word.image}
-                onChange={(file) => {
-                  onUpdateWord(index, "image", file);
-                  onClearError(`words.${index}.image`);
-                }}
-              />
-              {formErrors[`words.${index}.image`] && (
-                <div className="text-sm text-red-500 mt-1">
-                  {formErrors[`words.${index}.image`]}
+                    }
+                  />
+                  {formErrors[`words.${index}.text`] && (
+                    <div className="text-sm text-red-500 mt-1">
+                      {formErrors[`words.${index}.text`]}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+                <div className="grid w-full items-center gap-1.5">
+                  <Label className="flex items-center gap-1">
+                    Category
+                    <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={word.categoryIndex.toString()}
+                    onValueChange={(value) =>
+                      onUpdateWord(index, "categoryIndex", parseInt(value))
+                    }
+                  >
+                    <SelectTrigger
+                      className={`w-full ${
+                        formErrors[`words.${index}.categoryIndex`]
+                          ? "border-red-500 bg-red-50"
+                          : "bg-[#F3F3F5]"
+                      }`}
+                    >
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category, categoryIndex) => (
+                        <SelectItem
+                          key={categoryIndex}
+                          value={categoryIndex.toString()}
+                          disabled={category.trim() === ""}
+                        >
+                          {category.trim() ||
+                            `Category ${categoryIndex + 1} (empty)`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {formErrors[`words.${index}.categoryIndex`] && (
+                    <div className="text-sm text-red-500 mt-1">
+                      {formErrors[`words.${index}.categoryIndex`]}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         ))}
         {formErrors.words && (
