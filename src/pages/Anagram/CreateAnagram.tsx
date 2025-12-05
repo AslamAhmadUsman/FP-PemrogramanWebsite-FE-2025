@@ -165,7 +165,6 @@ const CreateAnagram = () => {
       const response = await fetch("http://localhost:4000/api/game/anagram", {
         method: "POST",
         headers: {
-          // Token wajib dikirim di sini dengan format Bearer
           Authorization: `Bearer ${token}`,
         },
         body: formData,

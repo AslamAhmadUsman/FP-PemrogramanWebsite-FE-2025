@@ -184,8 +184,19 @@ export default function HomePage() {
   };
 
   const GameCard = ({ game }: { game: Game }) => {
+    let gameType = "";
     const handlePlayGame = () => {
-      window.location.href = `/quiz/play/${game.id}`;
+      switch (game.game_template) {
+        case "Anagram":
+          gameType = "anagram";
+          break;
+        case "Quiz":
+          gameType = "quiz";
+          break;
+        default:
+          break;
+      }
+      window.location.href = `/${gameType}/play/${game.id}`;
     };
 
     return (

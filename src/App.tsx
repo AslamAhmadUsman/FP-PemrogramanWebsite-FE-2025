@@ -11,7 +11,7 @@ import EditQuiz from "./pages/EditQuiz";
 import Quiz from "./pages/Quiz";
 import ProtectedRoute from "./routes/ProtectedRoutes";
 import CreateAnagram from "./pages/anagram/CreateAnagram";
-import Anagram from "./pages/anagram/Anagram";
+import PlayAnagram from "./pages/anagram/PlayAnagram";
 
 function App() {
   return (
@@ -22,7 +22,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/sandbox" element={<Sandbox />} />
         <Route path="/quiz/play/:id" element={<Quiz />} />
-        <Route path="/anagram/play/:id" element={<Anagram />} />
+        <Route path="/anagram/play/:id" element={<PlayAnagram />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<ProfilePage />} />
