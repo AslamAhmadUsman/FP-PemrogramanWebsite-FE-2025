@@ -41,6 +41,7 @@ const CreateAnagram = () => {
 
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [thumbnailError, setThumbnailError] = useState(false);
 
   // QUESTION STATE
   const [questions, setQuestions] = useState<QuestionItem[]>([
@@ -53,6 +54,7 @@ const CreateAnagram = () => {
     if (file) {
       setThumbnail(file);
       setThumbnailPreview(URL.createObjectURL(file));
+      setThumbnailError(false); // Clear error when file is selected
     }
   };
 
@@ -95,18 +97,62 @@ const CreateAnagram = () => {
     }
   };
 
+  // Custom Alert Modal Function
+  const showAlert = (message: string, type: "error" | "info" = "error") => {
+    const alertDiv = document.createElement("div");
+    alertDiv.className =
+      "fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]";
+    alertDiv.innerHTML = `
+      <div class="bg-white rounded-lg p-8 max-w-md mx-4 text-center shadow-2xl animate-in fade-in zoom-in duration-300">
+        <div class="w-16 h-16 ${type === "error" ? "bg-red-100" : "bg-blue-100"} rounded-full flex items-center justify-center mx-auto mb-4">
+          ${
+            type === "error"
+              ? `<svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>`
+              : `<svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>`
+          }
+        </div>
+        <h3 class="text-xl font-bold text-slate-900 mb-2">${type === "error" ? "Oops!" : "Info"}</h3>
+        <p class="text-slate-600 mb-6">${message}</p>
+        <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors w-full">
+          OK
+        </button>
+      </div>
+    `;
+    document.body.appendChild(alertDiv);
+
+    const button = alertDiv.querySelector("button");
+    button?.addEventListener("click", () => {
+      document.body.removeChild(alertDiv);
+    });
+  };
+
   // LOGIC SUBMIT
   const handleSubmit = async () => {
     // 1. INPUT VALIDATION
-    if (!gameInfo.name) return alert("Game Title is required!");
+    if (!gameInfo.name) return showAlert("Game Title is required!");
+    if (!thumbnail) {
+      setThumbnailError(true);
+      showAlert("Game Thumbnail is required!");
+      // Scroll to thumbnail section
+      setTimeout(() => {
+        document
+          .getElementById("thumbnail-section")
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 300);
+      return;
+    }
 
     for (let i = 0; i < questions.length; i++) {
       if (!questions[i].word)
-        return alert(
+        return showAlert(
           `Question no ${i + 1}: Correct Answer (Word) is required!`,
         );
       if (!questions[i].imageFile)
-        return alert(`Question no ${i + 1}: Image Hint is required!`);
+        return showAlert(`Question no ${i + 1}: Image Hint is required!`);
     }
 
     setIsLoading(true);
@@ -114,8 +160,8 @@ const CreateAnagram = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("Authentication failed! Please login again.");
-        navigate("/login");
+        showAlert("Authentication failed! Please login again.");
+        setTimeout(() => navigate("/login"), 1500);
         return;
       }
 
@@ -178,11 +224,42 @@ const CreateAnagram = () => {
         throw new Error(result.message || "Failed to create game");
       }
 
-      alert("Anagram Game Created Successfully!");
-      navigate("/my-projects");
+      // Show success message with custom UI
+      const successDiv = document.createElement("div");
+      successDiv.className =
+        "fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]";
+      successDiv.innerHTML = `
+        <div class="bg-white rounded-lg p-8 max-w-md mx-4 text-center shadow-2xl animate-in fade-in zoom-in duration-300">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-slate-900 mb-2">Success!</h3>
+          <p class="text-slate-600 mb-6">Anagram game created successfully!</p>
+          <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+            Go to My Projects
+          </button>
+        </div>
+      `;
+      document.body.appendChild(successDiv);
+
+      const button = successDiv.querySelector("button");
+      button?.addEventListener("click", () => {
+        document.body.removeChild(successDiv);
+        navigate("/my-projects");
+      });
+
+      // Auto redirect after 3 seconds
+      setTimeout(() => {
+        if (document.body.contains(successDiv)) {
+          document.body.removeChild(successDiv);
+          navigate("/my-projects");
+        }
+      }, 3000);
     } catch (error: unknown) {
       console.error(error);
-      alert(`Error: ${(error as Error).message}`);
+      showAlert(`Error: ${(error as Error).message}`);
     } finally {
       setIsLoading(false);
     }
@@ -351,10 +428,16 @@ const CreateAnagram = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Game Thumbnail */}
-                <div className="space-y-2">
-                  <Label>Game Thumbnail</Label>
+                <div className="space-y-2" id="thumbnail-section">
+                  <Label>
+                    Game Thumbnail <span className="text-red-500">*</span>
+                  </Label>
                   <div
-                    className="aspect-video w-full border rounded-md bg-slate-100 flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-80 transition"
+                    className={`aspect-video w-full border-2 rounded-md bg-slate-100 flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-80 transition ${
+                      thumbnailError && !thumbnailPreview
+                        ? "border-red-500 bg-red-50"
+                        : "border-slate-200"
+                    }`}
                     onClick={() =>
                       document.getElementById("thumb-input")?.click()
                     }
@@ -379,6 +462,22 @@ const CreateAnagram = () => {
                     className="hidden"
                     onChange={handleThumbnailChange}
                   />
+                  {thumbnailError && !thumbnailPreview && (
+                    <p className="text-sm text-red-600 flex items-center gap-1 mt-1">
+                      <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Thumbnail image is required
+                    </p>
+                  )}
                 </div>
 
                 <hr />
