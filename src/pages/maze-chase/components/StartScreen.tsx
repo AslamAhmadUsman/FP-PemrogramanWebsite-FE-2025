@@ -1,4 +1,5 @@
 import React from "react";
+import start from "../assets/start.png";
 
 interface StartScreenProps {
   onStart: () => void;
@@ -11,7 +12,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, hideButton }) => {
       className="w-screen h-screen bg-cover bg-center relative flex items-center justify-center"
       style={{
         backgroundImage:
-          "url('https://tse3.mm.bing.net/th/id/OIP.92BupXyOnqGmZqhFbNsiUgHaE8?pid=Api&P=0&h=1000')",
+          `url(${start})`,
       }}
     >
       {/* Overlay */}
@@ -21,7 +22,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, hideButton }) => {
       {!hideButton && (
         <button
           onClick={onStart}
-          className="relative z-10 px-10 py-4 text-3xl font-bold text-white bg-black/40 backdrop-blur-md hover:bg-black/60 rounded-xl transition"
+          className="relative z-10 px-10 py-4 top-40 text-3xl font-bold text-white bg-black/40 backdrop-blur-md hover:bg-black/60 rounded-xl transition"
         >
           START
         </button>
