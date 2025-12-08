@@ -783,22 +783,30 @@ const PairOrNoPairGame = () => {
 
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/game/game-type/pair-or-no-pair/${gameId}/play/public`,
-        );
+        const apiUrl = `${import.meta.env.VITE_API_URL}/api/game/game-type/pair-or-no-pair/${gameId}/play/public`;
+        console.log("[DEBUG] Fetching from:", apiUrl);
+
+        const response = await fetch(apiUrl);
         const result = await response.json();
+
+        console.log("[DEBUG] API Response:", JSON.stringify(result, null, 2));
 
         // API returns: { success: true, data: { items: [...] } }
         const gameData = result.data;
+        console.log("[DEBUG] gameData:", gameData);
+        console.log("[DEBUG] items:", gameData?.items);
+        console.log("[DEBUG] items length:", gameData?.items?.length);
+
         if (gameData?.items && gameData.items.length > 0) {
+          console.log("[DEBUG] Using API items");
           setItems(gameData.items);
         } else {
           // API returned empty items, use fallback
-          console.warn("API returned empty items, using fallback data");
+          console.warn("[DEBUG] API returned empty items, using fallback data");
           setItems(fallbackItems);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("[DEBUG] Error fetching data:", error);
         setItems(fallbackItems);
       } finally {
         setIsLoading(false);
