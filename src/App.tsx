@@ -13,9 +13,9 @@ import CreateFlipTiles from "./pages/CreateFlipTiles";
 import EditFlipTiles from "./pages/EditFlipTiles";
 import FlipTiles from "./pages/FlipTiles";
 import ProtectedRoute from "./routes/ProtectedRoutes";
-import CreateAnagram from "./pages/anagram/CreateAnagram";
-import PlayAnagram from "./pages/anagram/PlayAnagram";
-import EditAnagram from "./pages/anagram/EditAnagram";
+import CreateAnagram from "./pages/Anagram/CreateAnagram";
+import PlayAnagram from "./pages/Anagram/PlayAnagram";
+import EditAnagram from "./pages/Anagram/EditAnagram";
 
 //  TAMBAHAN 1: Import Komponen Game Pair or No Pair
 import PairOrNoPairGame from "./pages/pair-or-no-pair";
