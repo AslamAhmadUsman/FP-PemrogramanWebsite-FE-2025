@@ -5,9 +5,21 @@ import { playSound } from "../utils/SoundManager.ts";
 interface GameBoardProps {
   onExit: () => void;
   gameData?: unknown;
+  isNightmareMode?: boolean;
+  isPlaying?: boolean;
+  isPaused?: boolean;
+  onPlayingChange?: (playing: boolean) => void;
+  onPausedChange?: (paused: boolean) => void;
 }
 
-const GameBoard: React.FC<GameBoardProps> = ({ onExit }) => {
+const GameBoard: React.FC<GameBoardProps> = ({
+  onExit,
+  isNightmareMode = false,
+  onPlayingChange,
+  onPausedChange,
+}) => {
+  // Nightmare mode speed multiplier
+  const speedMultiplier = isNightmareMode ? 0.8 : 1; // 0.8 = 1.25x faster
   const [score, setScore] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(30);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -34,6 +46,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ onExit }) => {
 
   // Ref untuk melacak apakah mole saat ini sudah dipukul
   const isHitRef = useRef<boolean>(false);
+  const hasStartedRef = useRef<boolean>(false);
 
   // Level requirements
   const LEVEL_REQUIREMENTS = {
@@ -51,6 +64,19 @@ const GameBoard: React.FC<GameBoardProps> = ({ onExit }) => {
     },
     3: { name: "BOSS RAID", desc: "Defeat the mega threat!", color: "red" },
   };
+
+  // Auto-start game when component mounts (when user clicks INITIALIZE_GAME)
+  useEffect(() => {
+    if (!hasStartedRef.current) {
+      hasStartedRef.current = true;
+      // Small delay to ensure component is fully mounted
+      const timer = setTimeout(() => {
+        startGame();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Check level completion
   useEffect(() => {
@@ -100,7 +126,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ onExit }) => {
     setTimeLeft(30);
     setIsPlaying(true);
     setIsPaused(false);
-    setGameSpeed(1100);
+    setGameSpeed(1100 * speedMultiplier); // Apply nightmare mode speed
     setActiveIndex(null);
     setCombo(0);
     setCurrentLevel(1);
@@ -111,15 +137,24 @@ const GameBoard: React.FC<GameBoardProps> = ({ onExit }) => {
     setShowLevel2Tutorial(false);
     setShowLevel3Tutorial(false);
     isHitRef.current = false;
+    // Notify parent that game is playing
+    if (onPlayingChange) onPlayingChange(true);
+    if (onPausedChange) onPausedChange(false);
   };
 
   const togglePause = () => {
-    setIsPaused(!isPaused);
+    const newPausedState = !isPaused;
+    setIsPaused(newPausedState);
+    // Notify parent about pause state change
+    if (onPausedChange) onPausedChange(newPausedState);
   };
 
   const handleExitGame = () => {
     setIsPlaying(false);
     setIsPaused(false);
+    // Notify parent that game stopped
+    if (onPlayingChange) onPlayingChange(false);
+    if (onPausedChange) onPausedChange(false);
     onExit();
   };
 
@@ -156,7 +191,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ onExit }) => {
     } else {
       newSpeed = Math.max(600, 1000 - score * 6);
     }
-    setGameSpeed(newSpeed);
+    // Apply nightmare mode speed multiplier
+    setGameSpeed(newSpeed * speedMultiplier);
 
     const moveMole = setInterval(() => {
       // CEK MISS
@@ -508,16 +544,18 @@ const GameBoard: React.FC<GameBoardProps> = ({ onExit }) => {
         {/* Score Panel */}
         <div className="flex-1 relative group">
           <div
-            className={`absolute -inset-[1px] bg-gradient-to-b ${combo >= 5 ? "from-red-600 via-yellow-500" : "from-yellow-500"} to-transparent rounded opacity-20 transition-all`}
+            className={`absolute -inset-[1px] bg-gradient-to-b ${isNightmareMode ? "from-red-600 via-red-800" : combo >= 5 ? "from-red-600 via-yellow-500" : "from-yellow-500"} to-transparent rounded opacity-20 transition-all`}
           ></div>
           <div
-            className={`relative bg-slate-900/90 border-l-4 ${combo >= 5 ? "border-red-500" : "border-yellow-500"} px-3 py-3 flex flex-col items-center justify-center transition-colors min-h-[60px]`}
+            className={`relative bg-slate-900/90 border-l-4 ${isNightmareMode ? "border-red-600" : combo >= 5 ? "border-red-500" : "border-yellow-500"} px-3 py-3 flex flex-col items-center justify-center transition-colors min-h-[60px]`}
           >
-            <span className="text-[10px] text-yellow-500/80 font-mono tracking-widest uppercase mb-1">
+            <span
+              className={`text-[10px] font-mono tracking-widest uppercase mb-1 ${isNightmareMode ? "text-red-500/80" : "text-yellow-500/80"}`}
+            >
               Score
             </span>
             <span
-              className={`text-3xl font-bold ${combo >= 5 ? "text-red-400 animate-pulse" : "text-white"}`}
+              className={`text-3xl font-bold ${isNightmareMode ? "text-red-400 animate-pulse" : combo >= 5 ? "text-red-400 animate-pulse" : "text-white"}`}
             >
               {score}
             </span>
@@ -526,12 +564,20 @@ const GameBoard: React.FC<GameBoardProps> = ({ onExit }) => {
 
         {/* Target Panel */}
         <div className="flex-1 relative group">
-          <div className="absolute -inset-[1px] bg-gradient-to-b from-green-500 to-transparent rounded opacity-20"></div>
-          <div className="relative bg-slate-900/90 border-t-4 border-b-4 border-green-500 px-3 py-3 flex flex-col items-center justify-center min-h-[60px]">
-            <span className="text-[10px] text-green-500/80 font-mono tracking-widest uppercase mb-1">
+          <div
+            className={`absolute -inset-[1px] bg-gradient-to-b ${isNightmareMode ? "from-red-500" : "from-green-500"} to-transparent rounded opacity-20`}
+          ></div>
+          <div
+            className={`relative bg-slate-900/90 border-t-4 border-b-4 ${isNightmareMode ? "border-red-500" : "border-green-500"} px-3 py-3 flex flex-col items-center justify-center min-h-[60px]`}
+          >
+            <span
+              className={`text-[10px] font-mono tracking-widest uppercase mb-1 ${isNightmareMode ? "text-red-500/80" : "text-green-500/80"}`}
+            >
               Target
             </span>
-            <span className="text-3xl font-bold text-green-400">
+            <span
+              className={`text-3xl font-bold ${isNightmareMode ? "text-red-400" : "text-green-400"}`}
+            >
               {LEVEL_REQUIREMENTS[currentLevel as 1 | 2 | 3]}
             </span>
           </div>
@@ -540,16 +586,18 @@ const GameBoard: React.FC<GameBoardProps> = ({ onExit }) => {
         {/* Time Panel */}
         <div className="flex-1 relative group">
           <div
-            className={`absolute -inset-[1px] bg-gradient-to-b ${timeLeft <= 10 ? "from-red-500" : "from-cyan-500"} to-transparent rounded opacity-20`}
+            className={`absolute -inset-[1px] bg-gradient-to-b ${isNightmareMode ? "from-red-600" : timeLeft <= 10 ? "from-red-500" : "from-cyan-500"} to-transparent rounded opacity-20`}
           ></div>
           <div
-            className={`relative bg-slate-900/90 border-r-4 ${timeLeft <= 10 ? "border-red-500" : "border-cyan-500"} px-3 py-3 flex flex-col items-center justify-center min-h-[60px]`}
+            className={`relative bg-slate-900/90 border-r-4 ${isNightmareMode ? "border-red-600" : timeLeft <= 10 ? "border-red-500" : "border-cyan-500"} px-3 py-3 flex flex-col items-center justify-center min-h-[60px]`}
           >
-            <span className="text-[10px] text-slate-400 font-mono tracking-widest uppercase mb-1">
+            <span
+              className={`text-[10px] font-mono tracking-widest uppercase mb-1 ${isNightmareMode ? "text-red-400" : "text-slate-400"}`}
+            >
               Time
             </span>
             <span
-              className={`text-3xl font-bold font-mono ${timeLeft <= 10 ? "text-red-400 animate-pulse" : "text-cyan-400"}`}
+              className={`text-3xl font-bold font-mono ${isNightmareMode ? "text-red-400 animate-pulse" : timeLeft <= 10 ? "text-red-400 animate-pulse" : "text-cyan-400"}`}
             >
               {timeLeft}
               <span className="text-sm">s</span>
@@ -561,9 +609,11 @@ const GameBoard: React.FC<GameBoardProps> = ({ onExit }) => {
       {/* MAINFRAME BOARD */}
       <div
         className={`relative bg-slate-900/50 p-6 rounded-xl border transition-all duration-300 shadow-2xl backdrop-blur-sm w-full ${
-          combo >= 5
-            ? "border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.3)]"
-            : "border-slate-700"
+          isNightmareMode
+            ? "border-red-600/70 shadow-[0_0_40px_rgba(220,38,38,0.5)]"
+            : combo >= 5
+              ? "border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.3)]"
+              : "border-slate-700"
         }`}
       >
         {/* Dekorasi Sudut */}

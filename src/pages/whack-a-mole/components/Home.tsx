@@ -8,9 +8,16 @@ interface GameData {
 interface HomeProps {
   onStart: () => void;
   gameData?: GameData;
+  isNightmareMode: boolean;
+  onToggleMode: () => void;
 }
 
-const Home: React.FC<HomeProps> = ({ onStart, gameData }) => {
+const Home: React.FC<HomeProps> = ({
+  onStart,
+  gameData,
+  isNightmareMode,
+  onToggleMode,
+}) => {
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col items-center relative z-10 font-mono pb-16">
       {/* --- HERO SECTION (TERMINAL STYLE) --- */}
@@ -44,16 +51,56 @@ const Home: React.FC<HomeProps> = ({ onStart, gameData }) => {
         </div>
       </div>
 
+      {/* --- MODE TOGGLE BUTTON --- */}
+      <div className="mb-8 relative mt-6">
+        {isNightmareMode && (
+          <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-red-400 text-xs animate-pulse whitespace-nowrap">
+            ⚠️ 1.25X SPEED | EXTREME DIFFICULTY ⚠️
+          </div>
+        )}
+
+        <button
+          onClick={onToggleMode}
+          className={`relative px-8 py-3 rounded-lg font-bold text-sm tracking-widest uppercase transition-all duration-500 transform hover:scale-105 ${
+            isNightmareMode
+              ? "bg-gradient-to-r from-red-900 to-red-700 border-2 border-red-500 text-red-100 shadow-[0_0_30px_rgba(220,38,38,0.6)] hover:shadow-[0_0_50px_rgba(220,38,38,0.8)] shake-nightmare"
+              : "bg-gradient-to-r from-slate-800 to-slate-700 border-2 border-slate-500 text-slate-300 shadow-[0_0_20px_rgba(100,116,139,0.3)] hover:shadow-[0_0_40px_rgba(100,116,139,0.5)]"
+          }`}
+        >
+          {isNightmareMode ? (
+            <span className="flex items-center gap-3">
+              <span className="text-2xl">☣️</span>
+              <span className="danger-blink">NIGHTMARE MODE ACTIVE</span>
+              <span className="text-2xl">☣️</span>
+            </span>
+          ) : (
+            <span className="flex items-center gap-3">
+              <span className="text-xl">👾</span>
+              <span>SWITCH TO NIGHTMARE MODE</span>
+              <span className="text-xl">☠️</span>
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* --- MAIN ACTION BUTTON --- */}
       <div className="mb-16 relative group">
-        <div className="absolute -inset-2 bg-gradient-to-r from-cyan-500 to-green-500 rounded-lg blur opacity-40 group-hover:opacity-100 transition duration-500 animate-pulse"></div>
+        <div
+          className={`absolute -inset-2 rounded-lg blur opacity-40 group-hover:opacity-100 transition duration-500 animate-pulse ${
+            isNightmareMode
+              ? "bg-gradient-to-r from-red-600 to-red-800"
+              : "bg-gradient-to-r from-cyan-500 to-green-500"
+          }`}
+        ></div>
         <button
           onClick={onStart}
-          className="relative bg-black border-2 border-cyan-500 hover:bg-cyan-500/10 text-cyan-400 font-bold text-2xl py-4 px-16 rounded-lg 
-          shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_40px_rgba(6,182,212,0.6)] 
-          transition-all duration-200 tracking-[0.2em] uppercase"
+          className={`relative bg-black border-2 font-bold text-2xl py-4 px-16 rounded-lg transition-all duration-200 tracking-[0.2em] uppercase ${
+            isNightmareMode
+              ? "border-red-500 hover:bg-red-500/10 text-red-400 shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_40px_rgba(220,38,38,0.6)]"
+              : "border-cyan-500 hover:bg-cyan-500/10 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_40px_rgba(6,182,212,0.6)]"
+          }`}
         >
-          &gt; INITIALIZE_GAME_
+          {isNightmareMode ? "☣️ ENTER_NIGHTMARE_" : "> INITIALIZE_GAME_"}
         </button>
       </div>
 
