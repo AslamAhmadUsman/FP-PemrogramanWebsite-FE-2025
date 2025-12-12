@@ -21,9 +21,12 @@ import CreateMazeChase from "./pages/maze-chase/CreateMazeChase";
 import EditMazeChase from "./pages/maze-chase/EditMazeChase";
 // Fix typo case sensitivity
 
-// 📌 TAMBAHAN 1: Import Komponen Game Pair or No Pair
 import PairOrNoPairGame from "./pages/pair-or-no-pair";
 import CreatePairOrNoPair from "./pages/pair-or-no-pair/create";
+
+import CreateSlidingPuzzle from "./pages/sliding-puzzle/CreateSlidingPuzzle";
+import EditSlidingPuzzle from "./pages/sliding-puzzle/EditSlidingPuzzle";
+import PlaySlidingPuzzle from "./pages/sliding-puzzle/PlaySlidingPuzzle";
 
 function App() {
   return (
@@ -40,6 +43,10 @@ function App() {
         <Route
           path="/pair-or-no-pair/play/:gameId"
           element={<PairOrNoPairGame />}
+        />
+        <Route
+          path="/sliding-puzzle/play/:id"
+          element={<PlaySlidingPuzzle />}
         />
 
         <Route element={<ProtectedRoute />}>
@@ -64,6 +71,14 @@ function App() {
           />
           <Route path="/maze-chase/edit/:id" element={<EditMazeChase />} />
           <Route path="/anagram/edit/:id" element={<EditAnagram />} />
+          <Route
+            path="/create-sliding-puzzle"
+            element={<CreateSlidingPuzzle />}
+          />
+          <Route
+            path="/sliding-puzzle/edit/:id"
+            element={<EditSlidingPuzzle />}
+          />
         </Route>
       </Routes>
     </>
