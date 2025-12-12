@@ -20,6 +20,10 @@ import EditAnagram from "./pages/Anagram/EditAnagram";
 import PairOrNoPairGame from "./pages/pair-or-no-pair";
 import CreatePairOrNoPair from "./pages/pair-or-no-pair/create";
 
+import CreateSlidingPuzzle from "./pages/sliding-puzzle/CreateSlidingPuzzle";
+import EditSlidingPuzzle from "./pages/sliding-puzzle/EditSlidingPuzzle";
+import PlaySlidingPuzzle from "./pages/sliding-puzzle/PlaySlidingPuzzle";
+
 function App() {
   return (
     <>
@@ -35,6 +39,7 @@ function App() {
           path="/pair-or-no-pair/play/:gameId"
           element={<PairOrNoPairGame />}
         />
+        <Route path="/sliding-puzzle/play/:id" element={<PlaySlidingPuzzle />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<ProfilePage />} />
@@ -56,6 +61,8 @@ function App() {
           />
           <Route path="/create-anagram" element={<CreateAnagram />} />
           <Route path="/anagram/edit/:id" element={<EditAnagram />} />
+          <Route path="/create-sliding-puzzle" element={<CreateSlidingPuzzle />} />
+          <Route path="/sliding-puzzle/edit/:id" element={<EditSlidingPuzzle />} />
         </Route>
       </Routes>
     </>
