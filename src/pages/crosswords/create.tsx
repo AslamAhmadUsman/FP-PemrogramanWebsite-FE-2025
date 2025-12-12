@@ -150,7 +150,7 @@ export default function CreateCrossword() {
                     placeholder="e.g. REACT"
                   />
                 </div>
-                <div className="flex-[2]">
+                <div className="flex-2">
                   <Label>Clue (Question)</Label>
                   <input
                     className="w-full border rounded-md px-3 py-2 mt-1 text-sm bg-slate-50"
