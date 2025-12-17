@@ -60,6 +60,10 @@ import CreateCrossword from "./pages/crosswords/create";
 import PlayCrossword from "./pages/crosswords/index";
 import EditCrossword from "./pages/crosswords/edit";
 
+// 🧩 Import Puzzle Game Components
+import PuzzleListPage from "./pages/puzzle";
+import PuzzleGamePage from "./pages/puzzle/[id]";
+
 function App() {
   return (
     <>
@@ -91,6 +95,10 @@ function App() {
           path="/sliding-puzzle/play/:id"
           element={<PlaySlidingPuzzle />}
         />
+
+        {/* 🧩 Puzzle Game Routes */}
+        <Route path="/puzzle" element={<PuzzleListPage />} />
+        <Route path="/puzzle/:id" element={<PuzzleGamePage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route
